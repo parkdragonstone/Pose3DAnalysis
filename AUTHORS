@@ -1,0 +1,31 @@
+# Pose3DAnalysis Authors and Contributors
+
+This file lists the authors and contributors to the Pose3DAnalysis project.
+
+## Original Author
+
+- **Yongseok Park** (pys9610@gmail.com)
+  - Initial development
+  - GUI design and implementation
+  - Integration with Pose2Sim
+
+## Acknowledgments
+
+This project is built on top of [Pose2Sim](https://github.com/perfanalytics/pose2sim), 
+which provides the core functionality for markerless kinematics.
+
+### Pose2Sim Authors
+
+- **David Pagnon** (contact@david-pagnon.com)
+  - Original Pose2Sim development
+  - Core algorithms and methodology
+
+For more information about Pose2Sim contributors, please refer to the 
+[Pose2Sim repository](https://github.com/perfanalytics/pose2sim).
+
+## Contributing
+
+Contributions are welcome! If you would like to contribute to this project, 
+please follow the standard contribution guidelines and ensure that your 
+contributions are properly documented.
+

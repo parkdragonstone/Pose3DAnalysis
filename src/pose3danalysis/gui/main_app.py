@@ -1,4 +1,20 @@
-# @copyright 2025 Pose3DAnalysis by Yongseok Park (pys9610@gmail.com)
+# -*- coding: utf-8 -*-
+"""
+Pose3DAnalysis - GUI Application for Multi-camera Pose Estimation and Analysis
+
+Desktop GUI for multi-camera (2~8) intrinsic/extrinsic calibration and
+markerless kinematics analysis.
+"""
+
+## AUTHORSHIP INFORMATION
+__author__ = "Yongseok Park"
+__copyright__ = "Copyright 2026, Pose3DAnalysis"
+__credits__ = ["Yongseok Park"]
+__license__ = "BSD 3-Clause License"
+__version__ = "1.0.0"
+__maintainer__ = "Yongseok Park"
+__email__ = "pys9610@gmail.com"
+__status__ = "Development"
 
 from __future__ import annotations
 

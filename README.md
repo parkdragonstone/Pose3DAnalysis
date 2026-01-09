@@ -168,3 +168,13 @@ Pose3DAnalysis extends Pose2Sim by providing:
 ### Citation
 
 If you use Pose2Sim in your research, please cite the original Pose2Sim project. For details on how to cite Pose2Sim, please refer to the [Pose2Sim repository](https://github.com/perfanalytics/pose2sim).
+
+## License
+
+This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
+
+## Authors
+
+- **Yongseok Park** (pys9610@gmail.com) - Initial development and GUI implementation
+
+See the [AUTHORS](AUTHORS) file for a complete list of contributors and acknowledgments.
