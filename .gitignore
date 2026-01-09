@@ -1,2 +1,6 @@
 app.log
 opensim.log
+
+# Build artifacts
+build/
+src/pose3danalysis.egg-info/
