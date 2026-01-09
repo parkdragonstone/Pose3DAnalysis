@@ -50,7 +50,10 @@ RUN conda run -n p3a pip install --no-cache-dir \
 
 # Install project dependencies from pyproject.toml
 WORKDIR /app
-RUN git clone https://github.com/parkdragonstone/Pose3DAnalysis.git /app
+RUN git clone https://github.com/parkdragonstone/Pose3DAnalysis /app
 RUN conda run -n p3a pip install --no-cache-dir -e .
+
+RUN conda run -n p3a pip uninstall onnxruntime
+RUN conda run -n p3a pip install onnxruntime-gpu
 
 CMD ["bash", "-lc", "conda run -n p3a pose3danalysis"]
