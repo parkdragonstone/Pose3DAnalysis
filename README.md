@@ -1,7 +1,7 @@
 # Pose3DAnalysis 프로젝트 구조
 
 ## 개요
-이 프로젝트는 Pose2Sim 을 GUI 기반으로 이용하기 위해 만들어졌음음
+이 프로젝트는 Pose2Sim 을 GUI 기반으로 이용하기 위해 만들어졌음
 
 ## 디렉토리 구조
 
@@ -78,7 +78,7 @@ conda activate p3a
 conda install -c opensim-org opensim -y
 ```
 
-#### Pytorch 설치치
+#### Pytorch 설치
 ```bash
 # ROCM 6.1 (Linux only)
 pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/rocm6.1
@@ -94,55 +94,171 @@ pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https
 
 ### 2. 실행 방법
 
-#### 방법 1: app.py 사용 (기존 방식)
-```bash
-python app.py
-```
-
-#### 방법 2: 모듈로 실행 (권장)
-```bash
-python -m pose3danalysis
-```
-
-#### 방법 3: 설치 후 실행
+#### 방법 1: 설치 후 실행
 ```bash
 pip install -e .
 pose3danalysis
 ```
 
-
+#### 방법 2: 모듈로 실행
 ```bash
-docker build -f docker/Dockerfile -t p3a .
-echo $DISPLAY
-docker run --gpus all --name --shm-size 16g -it --rm \
-  -e DISPLAY=$DISPLAY \
-  -v /tmp/.X11-unix:/tmp/.X11-unix \
-  -v /mnt/c/Users/USER/Desktop/demo:/demo \
-  -v "$PWD":/app p3a
-
-docker run --gpus all --name p3a --shm-size 16g -it --rm \
-  -e DISPLAY=$DISPLAY \
-  -v /tmp/.X11-unix:/tmp/.X11-unix \
-  -v /mnt/c/Users/USER/Desktop/demo:/demo \
-  -v "$PWD":/app p3a bash
+pip install -e .
+python -m pose3danalysis
 ```
 
-## Features (Calibration)
 
-- Load videos and preview side-by-side
-- Intrinsic calibration (checkerboard) -> `lens_calibration.toml`
-  - finishes with popup showing reprojection errors (px) per camera
-- Extrinsic calibration
-  - board method (checkerboard) or scene/object method
-  - scene/object method supports manual clicking of 2D points via OpenCV windows
-  - finishes with popup showing reprojection error (clicked vs projected) per camera
+### Docker 사용 방법
 
-## Notes
+#### GPU Version
 
-- For scene method, you must provide at least 6 3D points (x,y,z) in **mm**.
-- Point picking uses the **current frame** shown in the preview.
-  You can pause at a good frame, then click points.
+```bash
+# Build GPU image
+docker build -f docker/Dockerfile.gpu -t pose3danalysis:gpu .
 
+# Run GPU container
+docker run --gpus all --shm-size 16g -it --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v /mnt/c/Users/USER/Desktop/demo:/demo \ # project directory
+  -v "$PWD":/app \
+  pose3danalysis:gpu
+
+# Run GPU container with bash
+docker run --gpus all --shm-size 16g -it --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v /mnt/c/Users/USER/Desktop/demo:/demo \ # project directory
+  -v "$PWD":/app \
+  pose3danalysis:gpu bash
+```
+
+#### CPU Version
+
+```bash
+# Build CPU image
+docker build -f docker/Dockerfile.cpu -t pose3danalysis:cpu .
+
+# Run CPU container
+docker run --shm-size 16g -it --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v /mnt/c/Users/USER/Desktop/demo:/demo \
+  -v "$PWD":/app \
+  pose3danalysis:cpu
+
+# Run CPU container with bash
+docker run --shm-size 16g -it --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v /mnt/c/Users/USER/Desktop/demo:/demo \
+  -v "$PWD":/app \
+  pose3danalysis:cpu bash
+```
+
+## GUI 사용법
+
+### 1. Calibration (캘리브레이션)
+
+![Calibration Tab Interface](image/calibration.png)
+
+Calibration 탭에서는 다중 카메라의 내부 파라미터(Intrinsic)와 외부 파라미터(Extrinsic)를 설정할 수 있습니다.
+
+#### 1.1 카메라 내부 파라미터 (Intrinsic Calibration)
+
+1. **Output folder 설정**: 캘리브레이션 결과가 저장될 폴더를 선택합니다.
+2. **Camera 개수 선택**: 사용할 카메라 개수를 선택합니다 (2~8개).
+3. **Load Videos**: 각 카메라의 비디오 파일을 업로드합니다.
+4. **Chessboard 설정 입력**:
+   - Square size (mm): 체스보드의 사각형 크기
+   - Inner corners (cols, rows): 체스보드의 내부 코너 개수
+   - Extract every N sec: 프레임 추출 간격
+5. **Run Intrinsic**: 내부 파라미터 캘리브레이션을 실행합니다.
+
+![Intrinsic Calibration Result](image/calibration_intrinsic_result.png)
+
+캘리브레이션이 완료되면 `lens_calibration.toml` 파일이 생성되며, 각 카메라의 재투영 오차가 표시됩니다.
+
+#### 1.2 카메라 외부 파라미터 (Extrinsic Calibration)
+
+1. **Load Videos**: 각 카메라의 비디오 파일을 업로드합니다.
+2. **Load lens_calibration.toml**: 내부 파라미터 캘리브레이션에서 생성된 파일을 업로드합니다.
+3. **Object 좌표값 입력**: 
+   - 3D 공간의 점 좌표를 입력합니다 (x, y, z 형식, mm 단위)
+   - 한 포인트 입력 후 Enter 키를 누르고 다음 점을 입력합니다
+   - 최소 6개 이상의 점이 필요합니다
+4. **Pick 2D points by clicking**: 각 카메라 화면에서 해당하는 2D 점을 클릭하여 선택합니다.
+
+![Extrinsic Calibration - Point Picking](image/calibration_extrinsic_click.png)
+
+5. **Run Extrinsic**: 외부 파라미터 캘리브레이션을 실행하여 `camera_calibration.toml` 파일을 생성합니다.
+
+![Extrinsic Calibration Result](image/calibration_extrinsic_result.png)
+
+### 2. Motion Analysis (동작 분석)
+
+![Motion Analysis Tab Interface](image/motion_analysis.png)
+
+Motion Analysis 탭에서는 단일 폴더의 비디오를 분석하여 3D 마커 데이터를 생성합니다.
+
+**사용 방법:**
+
+1. **Upload Video Folder**: 비디오 파일들이 포함된 폴더를 선택합니다.
+   ```
+   Folder/
+   ├── cam01.avi
+   ├── cam02.avi
+   └── ...
+   ```
+
+2. **Upload Camera Calibration File**: `camera_calibration.toml` 파일을 업로드합니다.
+
+3. **Settings**: 분석 설정을 구성합니다.
+   - Pose Estimation 설정
+   - Triangulation 설정
+   - Filtering 설정
+   - Marker Augmentation 설정
+   - Kinematics 설정
+   - **Apply Settings** 버튼을 클릭하여 설정을 적용합니다.
+
+4. **Run**: 분석을 실행합니다. 결과는 선택한 폴더에 저장됩니다.
+
+### 3. Batch Processing (배치 처리)
+
+![Batch Processing Tab Interface](image/batchprocess.png)
+
+Batch Processing 탭에서는 여러 폴더의 비디오를 순차적으로 분석할 수 있습니다.
+
+**사용 방법:**
+
+1. **Upload Folder**: 하위 폴더들이 포함된 상위 폴더를 선택합니다.
+   ```
+   Folder/
+   ├── Trial1/
+   │   ├── cam01.avi
+   │   └── cam02.avi
+   ├── Trial2/
+   │   ├── cam01.avi
+   │   └── cam02.avi
+   └── ...
+   ```
+
+2. **Upload Camera Calibration File**: `camera_calibration.toml` 파일을 업로드합니다.
+
+3. **Settings**: Motion Analysis 탭과 동일한 설정을 사용합니다.
+   - **Apply Settings** 버튼을 클릭하여 설정을 적용합니다.
+
+4. **Run**: 모든 하위 폴더를 순차적으로 분석합니다.
+
+**처리 상태 표시:**
+
+- **진행 중 (Blue)**: 현재 처리 중인 폴더
+- **실패 (Red)**: 처리 중 오류가 발생한 폴더
+
+![Batch Processing - Failed](image/batchprocess_fail.png)
+
+- **성공 (Green)**: 성공적으로 처리 완료된 폴더
+
+![Batch Processing - Success](image/batchprocess_success.png)
 ## Acknowledgments
 
 This project is built on top of [Pose2Sim](https://github.com/perfanalytics/pose2sim), a free and open-source workflow for 3D markerless kinematics. Pose2Sim provides the core functionality for pose estimation, triangulation, filtering, and OpenSim integration.

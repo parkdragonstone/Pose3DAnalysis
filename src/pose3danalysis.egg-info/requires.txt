@@ -1,0 +1,26 @@
+toml
+lxml
+matplotlib
+mpl_interactions
+PyQt5
+tqdm
+anytree
+pandas>=1.5
+scipy
+statsmodels
+filterpy
+ipython
+c3d
+rtmlib
+openvino
+onnxruntime
+opencv-python!=4.11.*
+customtkinter
+requests
+ultralytics
+
+[:python_version < "3.12"]
+numpy<2.0
+
+[:python_version >= "3.12"]
+numpy<2.3,>=2.0

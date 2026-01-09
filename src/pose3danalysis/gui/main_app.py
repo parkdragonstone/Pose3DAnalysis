@@ -6,6 +6,8 @@ Desktop GUI for multi-camera (2~8) intrinsic/extrinsic calibration and
 markerless kinematics analysis.
 """
 
+from __future__ import annotations
+
 ## AUTHORSHIP INFORMATION
 __author__ = "Yongseok Park"
 __copyright__ = "Copyright 2026, Pose3DAnalysis"
@@ -15,8 +17,6 @@ __version__ = "1.0.0"
 __maintainer__ = "Yongseok Park"
 __email__ = "pys9610@gmail.com"
 __status__ = "Development"
-
-from __future__ import annotations
 
 import time
 from pathlib import Path

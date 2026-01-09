@@ -30,11 +30,14 @@ def extract_frames_every_n_sec(video_path: str, out_dir: Path, every_sec: int) -
     last_saved_ms = None
     idx = 0
     save_i = 0
+    frame_count = 0
 
     while True:
         ok, frame = cap.read()
         if not ok or frame is None:
             break
+        
+        frame_count += 1
 
         pos_ms = cap.get(cv2.CAP_PROP_POS_MSEC)
         if last_saved_ms is None or (pos_ms - last_saved_ms) >= every_sec * 1000.0:
@@ -51,4 +54,12 @@ def extract_frames_every_n_sec(video_path: str, out_dir: Path, every_sec: int) -
             break
 
     cap.release()
+    
+    if not saved:
+        raise RuntimeError(
+            f"No frames were extracted from video: {video_path}\n"
+            f"Read {frame_count} frames but none were saved.\n"
+            f"This may indicate a codec issue. Please convert to H.264 (mp4) format."
+        )
+    
     return sorted(saved)

@@ -1,11 +1,13 @@
 include README.md
+include LICENSE
+include AUTHORS
 include pyproject.toml
 
-# Include non-python resources used at runtime
-recursive-include PoseAnalysis *.xml *.osim *.stl *.vtp *.npy *.toml *.json *.yaml *.yml *.txt
-recursive-include models *.py *.toml *.json *.yaml *.yml *.txt
-recursive-include datasets *.py
+# Include Pose2Sim resources
+recursive-include Pose2Sim *.xml *.osim *.stl *.vtp *.npy *.onnx *.toml *.json *.yaml *.yml *.txt *.py
 
-# Keep gui/core resources if any
-recursive-include gui *.txt *.json *.yaml *.yml *.toml
-recursive-include core *.txt *.json *.yaml *.yml *.toml
+# Include model files (tracked via Git LFS)
+recursive-include models *.py *.toml *.json *.yaml *.yml *.txt
+
+# Include source code
+recursive-include src *.py

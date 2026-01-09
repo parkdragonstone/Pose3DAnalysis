@@ -1,0 +1,56 @@
+# GPU version Dockerfile for Pose3DAnalysis
+# Based on CUDA 12.4.1 + cuDNN + Ubuntu 22.04
+ARG CUDA_VERSION=12.4.1
+ARG UBUNTU_VERSION=ubuntu22.04
+
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn-devel-${UBUNTU_VERSION}
+
+ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common ca-certificates curl wget gnupg lsb-release \
+    build-essential cmake ninja-build git tzdata \
+    libgl1 libglib2.0-0 libsm6 libxext6 libxrender1 \
+    x11-apps xauth ffmpeg \
+ && add-apt-repository ppa:deadsnakes/ppa -y \
+ && apt-get update && apt-get install -y --no-install-recommends \
+    python3.12 python3.12-dev python3.12-venv \
+ && rm -rf /var/lib/apt/lists/*
+
+# Miniconda setup
+ENV CONDA_DIR=/opt/conda
+RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p ${CONDA_DIR} \
+    && rm -f /tmp/miniconda.sh \
+    && ${CONDA_DIR}/bin/conda clean -ay
+ENV PATH=${CONDA_DIR}/bin:$PATH
+SHELL ["/bin/bash", "-lc"]
+
+# Accept Anaconda Terms (required in non-interactive builds)
+RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
+# Create conda environment
+RUN conda create -n p3a python=3.12 -y && conda clean -ay
+
+# Install OpenSim and ffmpeg via conda
+RUN conda run -n p3a conda install -c opensim-org opensim -y && \
+    conda run -n p3a conda install -c conda-forge ffmpeg -y && \
+    conda clean -ay
+
+# Install pip basics
+RUN conda run -n p3a python -m pip install -U pip setuptools wheel cython
+
+# Install PyTorch with CUDA 12.4 support
+RUN conda run -n p3a pip install --no-cache-dir \
+    torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 \
+    --index-url https://download.pytorch.org/whl/cu124
+
+
+# Install project dependencies from pyproject.toml
+WORKDIR /app
+RUN git clone https://github.com/parkdragonstone/Pose3DAnalysis.git /app
+RUN conda run -n p3a pip install --no-cache-dir -e .
+
+CMD ["bash", "-lc", "conda run -n p3a pose3danalysis"]

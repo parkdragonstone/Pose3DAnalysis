@@ -15,7 +15,7 @@ description = "GUI-based interface for Pose2Sim — Multi-camera calibration and
 readme = "README.md"
 requires-python = ">=3.9"
 keywords = ["markerless", "kinematics", "OpenPose", "OpenSim", "3D human pose", "biomechanics", "mocap", "gui", "calibration", "motion capture"]
-license = {text = "BSD-3-Clause"}
+license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -33,6 +33,7 @@ classifiers = [
 ]
 urls = {Homepage = "https://github.com/parkdragonstone/Pose3DAnalysis", "Bug Tracker" = "https://github.com/parkdragonstone/Pose3DAnalysis/issues"}
 dependencies = [
+    "ultralytics",
     "toml",
     "numpy<2.0; python_version<'3.12'",
     "numpy>=2.0,<2.3; python_version>='3.12'",
@@ -54,8 +55,7 @@ dependencies = [
     "opencv-python != 4.11.*",  # avoid 4.11 due to displaymatrix ignored (rotation metadata)
     # "deep-sort-realtime",     # likely not required anymore
     "customtkinter",
-    "requests",
-    "ultralytics"
+    "requests"
 ]
 
 [tool.setuptools_scm]

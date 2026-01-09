@@ -78,7 +78,7 @@ class CalibrationTab(ttk.Frame):
 
         # extrinsic inputs
         self.lens_toml_path = tk.StringVar(value="")
-        self.extrinsic_method = tk.StringVar(value="board")  # board | scene
+        self.extrinsic_method = tk.StringVar(value="scene")  # board | scene
         self.board_position = tk.StringVar(value="horizontal")
 
         # scene points (object in mm, image in px)
@@ -342,11 +342,6 @@ class CalibrationTab(ttk.Frame):
 
         n = self.num_cams.get()
 
-        # Layout rule (as requested):
-        # 2 cams  -> 1 col x 2 rows
-        # 3-4     -> 2 cols x 2 rows
-        # 5-6     -> 2 cols x 3 rows
-        # 7-8     -> 2 cols x 4 rows
         if n <= 2:
             cols, rows = 1, 2
         elif n <= 4:
@@ -505,49 +500,66 @@ class CalibrationTab(ttk.Frame):
         self._log("Clearing videos...")
         
         try:
-            # Stop playback
+            # Stop playback first
             for i in range(n):
                 if i < len(self.playing):
                     self.playing[i] = False
             
-            # Clear preview widgets first (before resetting state)
+            # Clear preview widgets
             for widget in self.preview_widgets:
-                # ZoomPreview is a Canvas, so we can delete all items
-                widget.delete("all")
-                # Reset internal state
-                widget._rgb = None
-                widget._img = None
-                widget._photo = None
-                widget._img_id = None
+                try:
+                    # ZoomPreview has a clear() method
+                    if hasattr(widget, 'clear'):
+                        widget.clear()
+                    else:
+                        widget.delete("all")
+                        widget._rgb = None
+                        widget._img = None
+                        widget._photo = None
+                        widget._img_id = None
+                    widget.update_idletasks()
+                except Exception:
+                    pass
             
-            # Reset camera state
-            self._init_camera_state(n)
+            # Reset scale widgets and frame labels
+            for i in range(n):
+                if i < len(self.scale_widgets):
+                    try:
+                        self.scale_widgets[i].configure(to=0)
+                        self.scale_widgets[i].set(0)
+                    except Exception:
+                        pass
+                if i < len(self.frame_labels):
+                    try:
+                        self.frame_labels[i].configure(text="Frame: 0/0")
+                    except Exception:
+                        pass
             
             # Clear scene picks / last extrinsic overlays
             self.scene_obj_points_mm = None
+            self.scene_img_points_px = [None] * n
             self._last_extr_R = None
             self._last_extr_T = None
             self._last_extr_K = None
             self._last_extr_D = None
             
-            # Reset scale widgets and frame labels
-            for i in range(n):
-                if i < len(self.scale_widgets):
-                    self.scale_widgets[i].configure(to=0)
-                    self.scale_widgets[i].set(0)
-                if i < len(self.frame_labels):
-                    self.frame_labels[i].configure(text="Frame: 0/0")
+            # Reset camera state data (preserve widget references)
+            # Don't call _init_camera_state as it resets widget lists
+            self.video_paths = [""] * n
+            self.playing = [False] * n
+            self.pos = [0] * n
+            self.preview_files = [[] for _ in range(n)]
+            self.corner_overlay_files = [[] for _ in range(n)]
+            self._last_rgb = [None] * n
             
             # Wipe workspace folder
             self.session_manager.reset_workspace()
             
-            # Force canvas update to show black background
-            for widget in self.preview_widgets:
-                widget.update_idletasks()
-            
             self._log("Videos cleared.")
         except Exception as e:
-            self._log(f"Error clearing videos: {e}")
+            import traceback
+            error_msg = f"{e}\n{traceback.format_exc()}"
+            self._log(f"Error clearing videos: {error_msg}")
             self._popup_error("Clear Error", f"Failed to clear videos: {e}")
 
     def _build_preview_cache(self, ws: Path):
@@ -561,7 +573,19 @@ class CalibrationTab(ttk.Frame):
             for p in prev_dir.glob("*.png"):
                 p.unlink(missing_ok=True)
 
-            self.preview_files[i] = extract_frames_every_n_sec(self.video_paths[i], prev_dir, every)
+            try:
+                files = extract_frames_every_n_sec(self.video_paths[i], prev_dir, every)
+                if not files:
+                    raise RuntimeError(
+                        f"No frames extracted from video: {Path(self.video_paths[i]).name}\n"
+                        f"This usually means the video codec is not supported.\n"
+                        f"Please convert the video to H.264 (mp4) format."
+                    )
+                self.preview_files[i] = files
+            except Exception as e:
+                # If extraction fails, set empty list and re-raise
+                self.preview_files[i] = []
+                raise
 
             # reset overlays
             self.corner_overlay_files[i] = []
@@ -600,9 +624,13 @@ class CalibrationTab(ttk.Frame):
 
     def _choose_preview_image(self, idx: int) -> Path:
         i = idx
+        if not self.preview_files[i]:
+            raise RuntimeError(f"No preview files available for camera {i+1}")
         j = max(0, min(self.pos[i], len(self.preview_files[i]) - 1))
         if self.show_corners_preview.get() and self.corner_overlay_files[i] and j < len(self.corner_overlay_files[i]):
             return self.corner_overlay_files[i][j]
+        if j >= len(self.preview_files[i]):
+            j = len(self.preview_files[i]) - 1
         return self.preview_files[i][j]
 
     def _render_cam(self, idx: int):

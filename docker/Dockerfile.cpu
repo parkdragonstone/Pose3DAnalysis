@@ -1,20 +1,22 @@
-# (추정) 기반이 CUDA 12.4.1 + cuDNN9 + Ubuntu 20.04 계열로 보임
-FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
+# CPU version Dockerfile for Pose3DAnalysis
+# Based on Ubuntu 22.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     software-properties-common ca-certificates curl wget gnupg lsb-release \
     build-essential cmake ninja-build git tzdata \
     libgl1 libglib2.0-0 libsm6 libxext6 libxrender1 \
+    x11-apps xauth ffmpeg \
  && add-apt-repository ppa:deadsnakes/ppa -y \
  && apt-get update && apt-get install -y --no-install-recommends \
-    python3.10 python3.10-dev python3.10-venv \
+    python3.12 python3.12-dev python3.12-venv \
  && rm -rf /var/lib/apt/lists/*
 
+# Miniconda setup
 ENV CONDA_DIR=/opt/conda
-
-# --- Miniconda ---
 RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
     && bash /tmp/miniconda.sh -b -p ${CONDA_DIR} \
     && rm -f /tmp/miniconda.sh \
@@ -22,41 +24,31 @@ RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.s
 ENV PATH=${CONDA_DIR}/bin:$PATH
 SHELL ["/bin/bash", "-lc"]
 
-# --- Accept Anaconda Terms (required in non-interactive builds) ---
+# Accept Anaconda Terms (required in non-interactive builds)
 RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
     conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
-# --- Create env ---
-RUN conda create -n p3a python=3.10 -y && conda clean -ay
+# Create conda environment
+RUN conda create -n p3a python=3.12 -y && conda clean -ay
 
+# Install OpenSim and ffmpeg via conda
 RUN conda run -n p3a conda install -c opensim-org opensim -y && \
+    conda run -n p3a conda install -c conda-forge ffmpeg -y && \
     conda clean -ay
 
+# Install pip basics
+RUN conda run -n p3a python -m pip install -U pip setuptools wheel cython
 
+# Install PyTorch CPU version
 RUN conda run -n p3a pip install --no-cache-dir \
     torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 \
-    --index-url https://download.pytorch.org/whl/cu124
+    --index-url https://download.pytorch.org/whl/cpu
 
-RUN conda run -n p3a pip install openmim
-RUN conda run -n p3a pip install "mmengine" "mmcv<2.2.0"
-RUN conda run -n p3a pip install "mmdet<3.3.0"
 
-RUN conda run -n p3a pip install --no-build-isolation --no-cache-dir mmpose
-RUN conda run -n p3a pip install ultralytics
-
-WORKDIR /mmpose
-RUN git clone https://github.com/open-mmlab/mmpose.git /mmpose \
- && git checkout main
-RUN conda run -n p3a pip install -r requirements.txt
+# Install project dependencies from pyproject.toml
+WORKDIR /app
+RUN git clone https://github.com/parkdragonstone/Pose3DAnalysis.git /app
 RUN conda run -n p3a pip install --no-cache-dir -e .
 
-# numpy 핀 고정(중간에 uninstall/reinstall 흔적 존재)
-RUN conda run -n p3a pip uninstall -y numpy
-RUN conda run -n p3a pip install numpy==1.26.4
-
-WORKDIR /app
-COPY . /app
-
-RUN conda run -n p3a pip install .
-
-CMD ["bash", "-lc", "conda run -n p3a python app.py"]
+# Default command
+CMD ["bash", "-lc", "conda run -n p3a pose3danalysis"]

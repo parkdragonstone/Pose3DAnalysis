@@ -281,7 +281,16 @@ def augment_markers_all(config_dict):
                 
             # %% Load model and weights, and predict outputs.
             onnx_path = os.path.join(augmenterModelDir, "model.onnx")
-            session = ort.InferenceSession(onnx_path)
+            # Check if file exists and has valid size
+            if not os.path.exists(onnx_path):
+                raise FileNotFoundError(f"ONNX model file not found: {onnx_path}")
+            file_size = os.path.getsize(onnx_path)
+            if file_size < 1000:  # ONNX files should be at least 1KB
+                raise ValueError(f"ONNX model file appears to be corrupted or empty: {onnx_path} (size: {file_size} bytes)")
+            try:
+                session = ort.InferenceSession(onnx_path)
+            except Exception as e:
+                raise RuntimeError(f"Failed to load ONNX model from {onnx_path}: {e}. The model file may be corrupted. Please re-download or restore the model file.")
             outputs = session.run(['output_0'], {'inputs': inputs.astype(np.float32)})[0]
 
             # %% Post-process outputs.
