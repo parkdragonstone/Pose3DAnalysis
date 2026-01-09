@@ -92,15 +92,22 @@ pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https
 pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cpu
 ```
 
-#### Install all package
-```bash
-pip install .
-```
+### 2. 실행 방법
 
-## Run
-
+#### 방법 1: app.py 사용 (기존 방식)
 ```bash
 python app.py
+```
+
+#### 방법 2: 모듈로 실행 (권장)
+```bash
+python -m pose3danalysis
+```
+
+#### 방법 3: 설치 후 실행
+```bash
+pip install -e .
+pose3danalysis
 ```
 
 
