@@ -1,6 +1,7 @@
-# Pose3DAnalysis 프로젝트 구조
+# Pose3DAnalysis
 
 ## 개요
+
 이 프로젝트는 Pose2Sim 을 GUI 기반으로 이용하기 위해 만들어졌음
 
 ## 디렉토리 구조
@@ -64,21 +65,23 @@ Pose3DAnalysis_v4/
 └── README.md                       # 프로젝트 문서
 ```
 
-
 ### 1. Installation
 
 #### 가상환경 설치
+
 ```bash
 conda create --name p3a python=3.12 -y
 conda activate p3a
 ```
 
 #### Opensim Package 다운로드
+
 ```bash
 conda install -c opensim-org opensim -y
 ```
 
 #### Pytorch 설치
+
 ```bash
 # ROCM 6.1 (Linux only)
 pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/rocm6.1
@@ -95,17 +98,18 @@ pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https
 ### 2. 실행 방법
 
 #### 방법 1: 설치 후 실행
+
 ```bash
 pip install -e .
 pose3danalysis
 ```
 
 #### 방법 2: 모듈로 실행
+
 ```bash
 pip install -e .
 python -m pose3danalysis
 ```
-
 
 ### Docker 사용 방법
 
@@ -182,7 +186,7 @@ Calibration 탭에서는 다중 카메라의 내부 파라미터(Intrinsic)와 �
 
 1. **Load Videos**: 각 카메라의 비디오 파일을 업로드합니다.
 2. **Load lens_calibration.toml**: 내부 파라미터 캘리브레이션에서 생성된 파일을 업로드합니다.
-3. **Object 좌표값 입력**: 
+3. **Object 좌표값 입력**:
    - 3D 공간의 점 좌표를 입력합니다 (x, y, z 형식, mm 단위)
    - 한 포인트 입력 후 Enter 키를 누르고 다음 점을 입력합니다
    - 최소 6개 이상의 점이 필요합니다
@@ -203,23 +207,22 @@ Motion Analysis 탭에서는 단일 폴더의 비디오를 분석하여 3D 마�
 **사용 방법:**
 
 1. **Upload Video Folder**: 비디오 파일들이 포함된 폴더를 선택합니다.
+
    ```
    Folder/
    ├── cam01.avi
    ├── cam02.avi
    └── ...
    ```
-
 2. **Upload Camera Calibration File**: `camera_calibration.toml` 파일을 업로드합니다.
-
 3. **Settings**: 분석 설정을 구성합니다.
+
    - Pose Estimation 설정
    - Triangulation 설정
    - Filtering 설정
    - Marker Augmentation 설정
    - Kinematics 설정
    - **Apply Settings** 버튼을 클릭하여 설정을 적용합니다.
-
 4. **Run**: 분석을 실행합니다. 결과는 선택한 폴더에 저장됩니다.
 
 ### 3. Batch Processing (배치 처리)
@@ -231,6 +234,7 @@ Batch Processing 탭에서는 여러 폴더의 비디오를 순차적으로 분�
 **사용 방법:**
 
 1. **Upload Folder**: 하위 폴더들이 포함된 상위 폴더를 선택합니다.
+
    ```
    Folder/
    ├── Trial1/
@@ -241,12 +245,10 @@ Batch Processing 탭에서는 여러 폴더의 비디오를 순차적으로 분�
    │   └── cam02.avi
    └── ...
    ```
-
 2. **Upload Camera Calibration File**: `camera_calibration.toml` 파일을 업로드합니다.
-
 3. **Settings**: Motion Analysis 탭과 동일한 설정을 사용합니다.
-   - **Apply Settings** 버튼을 클릭하여 설정을 적용합니다.
 
+   - **Apply Settings** 버튼을 클릭하여 설정을 적용합니다.
 4. **Run**: 모든 하위 폴더를 순차적으로 분석합니다.
 
 **처리 상태 표시:**
@@ -259,6 +261,7 @@ Batch Processing 탭에서는 여러 폴더의 비디오를 순차적으로 분�
 - **성공 (Green)**: 성공적으로 처리 완료된 폴더
 
 ![Batch Processing - Success](image/batchprocess_success.png)
+
 ## Acknowledgments
 
 This project is built on top of [Pose2Sim](https://github.com/perfanalytics/pose2sim), a free and open-source workflow for 3D markerless kinematics. Pose2Sim provides the core functionality for pose estimation, triangulation, filtering, and OpenSim integration.
