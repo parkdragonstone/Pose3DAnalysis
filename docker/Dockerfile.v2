@@ -1,0 +1,50 @@
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+ENV DEBIAN_FRONTEND=noninteractive TZ=Asia/Seoul
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git wget curl ca-certificates \
+    build-essential cmake pkg-config ninja-build \
+    ffmpeg \
+    libgl1 libglib2.0-0 libsm6 libxext6 libxrender1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Miniconda
+ENV CONDA_DIR=/opt/conda
+RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p ${CONDA_DIR} \
+    && rm -f /tmp/miniconda.sh
+ENV PATH=${CONDA_DIR}/bin:$PATH
+SHELL ["/bin/bash", "-lc"]
+
+# (선택) TOS 자동 동의가 필요하면 추가
+RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
+# env
+RUN conda create -n p3a python=3.10 -y && conda clean -ay
+
+# opensim + deps
+RUN conda run -n p3a conda install -c opensim-org opensim -y && \
+    conda run -n p3a conda install -c conda-forge chumpy tk -y && \
+    conda clean -ay
+
+# pip basics
+RUN conda run -n p3a python -m pip install -U pip setuptools wheel
+
+# torch cu124
+RUN conda run -n p3a pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 \
+    --index-url https://download.pytorch.org/whl/cu124
+
+# openmmlab (mmcv/mmdet 버전은 너가 최종 선택)
+RUN conda run -n p3a pip install -U openmim && \
+    conda run -n p3a mim install "mmengine>=0.10.0" && \
+    conda run -n p3a mim install "mmcv<2.2.0" && \
+    conda run -n p3a mim install "mmdet<3.3.0" && \
+    conda run -n p3a mim install "mmpose>=1.1.0"
+
+RUN conda run -n p3a pip install --no-cache-dir -e .
+
+WORKDIR /app
+COPY . /app
+
+CMD ["bash", "-lc", "conda run -n p3a python app.py"]

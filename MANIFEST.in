@@ -1,0 +1,11 @@
+include README.md
+include pyproject.toml
+
+# Include non-python resources used at runtime
+recursive-include PoseAnalysis *.xml *.osim *.stl *.vtp *.npy *.toml *.json *.yaml *.yml *.txt
+recursive-include models *.py *.toml *.json *.yaml *.yml *.txt
+recursive-include datasets *.py
+
+# Keep gui/core resources if any
+recursive-include gui *.txt *.json *.yaml *.yml *.toml
+recursive-include core *.txt *.json *.yaml *.yml *.toml
